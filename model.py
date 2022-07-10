@@ -23,31 +23,45 @@ class ImagePixelPredictor(nn.Module):
         hidden_layers = []
         for _ in range(n_hidden_layers):
             # Add a CNN layer
-            layer = nn.Conv2d(in_channels=n_input_channels, out_channels=n_hidden_kernels, kernel_size=(3, 3))
+            layer = nn.Conv2d(in_channels=n_input_channels,
+                              out_channels=n_hidden_kernels,
+                              kernel_size=(3, 3),
+                              padding="same")
+
             hidden_layers.append(layer)
             # Add relu activation module to list of modules
             hidden_layers.append(nn.ReLU())
             n_input_channels = n_hidden_kernels
 
         self.hidden_layers = nn.Sequential(*hidden_layers)
-        self.output_layer = nn.Conv2d(in_channels=n_input_channels, out_channels=n_output_channels, kernel_size=(3, 3))
+        self.output_layer = nn.Conv2d(in_channels=n_input_channels,
+                                      out_channels=n_output_channels,
+                                      kernel_size=(3, 3),
+                                      padding="same")
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, input_arr: torch.Tensor, known_arr: torch.Tensor):
         """Apply CNN to "x"
 
         Parameters
         ----------
-        x: torch.Tensor
+        input_arr: torch.Tensor
             Input tensor of shape (n_samples, n_input_channels, x, y)
+
+        known_arr: torch.Tensor
+            Known tensor of shape (n_samples, n_input_channels, x, y)
 
         Returns
         ----------
         torch.Tensor
             Output tensor of shape (n_samples, n_output_channels, u, v)
         """
+        # Concatenate input_array and known_array
+        x = torch.concat((input_arr, known_arr), 1)
+
         # Apply hidden layers module
         hidden_features = self.hidden_layers(x)
 
         # Apply last layer (=output layer)
-        output = self.output_layer(hidden_features)
-        return output
+        x = self.output_layer(hidden_features)
+        x = torch.clamp(x, 0, 255)
+        return x

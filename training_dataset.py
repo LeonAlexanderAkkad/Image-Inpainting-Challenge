@@ -31,44 +31,7 @@ class ImageDataset(Dataset):
     def __len__(self):
         return len(self.input_arrays)
 
-    ####################################################
-    # Helper Methods
-    ####################################################
-
-    # noinspection PyMethodMayBeStatic
-    def __process_dataset(self, file_path: str):
-        content = glob.glob(os.path.join(file_path, '**', '*.jpg'), recursive=True)
-        content.sort()
-        resize = transforms.Compose([
-            transforms.Resize((100, 100), interpolation=InterpolationMode.BILINEAR)
-        ])
-        random.seed(69)
-        all_images = {}
-        image_arrays, known_arrays, input_arrays = [], [], []
-
-        for picture in tqdm(content, desc="Processing images"):
-            with Image.open(picture) as image:
-                image = resize(image)
-            image_np = np.array(image)
-            offset_0 = random.randint(0, 8)
-            offset_1 = random.randint(0, 8)
-            spacing_0 = random.randint(2, 6)
-            spacing_1 = random.randint(2, 6)
-            input_array, known_array, image_array = ex4(image_np, (offset_0, offset_1), (spacing_0, spacing_1))
-            input_arrays.append(image_array)
-            known_arrays.append(known_array)
-            image_arrays.append(image_array)
-
-        all_images["input_arrays"] = input_arrays
-        all_images["known_arrays"] = known_arrays
-        all_images["image_arrays"] = image_arrays
-
-        with open("images_processed.pkl", "wb") as f:
-            pkl.dump(all_images, f)
-
-        print(f"Processed {len(content)} files")
-
-    def split(self, ratios: Tuple[int, int, int], random_seed=69) -> Tuple[Subset, Subset, Subset]:
+    def split(self, ratios: Tuple[int, int, int], random_seed=42) -> Tuple[Subset, Subset, Subset]:
         ratios_sum = sum(ratios)
 
         n_samples = len(self)
@@ -87,10 +50,7 @@ class ImageDataset(Dataset):
                    "validation_set_indices": validation_set_indices
                    }
 
-        print(f'Splitting dataset into subsets with size '
-              f'{len(training_set_indices)}, {len(test_set_indices)}, {len(validation_set_indices)}')
-
-        with open("indices.pkl" "wb") as f:
+        with open("indices.pkl", "wb") as f:
             pkl.dump(indices, f)
 
         return (
@@ -98,3 +58,40 @@ class ImageDataset(Dataset):
             Subset(self, indices=test_set_indices),
             Subset(self, indices=validation_set_indices)
         )
+
+    ####################################################
+    # Helper Methods
+    ####################################################
+
+    # noinspection PyMethodMayBeStatic
+    def __process_dataset(self, file_path: str):
+        content = glob.glob(os.path.join(file_path, '**', '*.jpg'), recursive=True)
+        content.sort()
+        resize = transforms.Compose([
+            transforms.Resize((100, 100), interpolation=InterpolationMode.BILINEAR)
+        ])
+        random.seed(42)
+        image_arrays, known_arrays, input_arrays = [], [], []
+
+        for picture in tqdm(content, desc="Processing images"):
+            with Image.open(picture) as image:
+                image = resize(image)
+            image_np = np.array(image)
+            offset_0 = random.randint(0, 8)
+            offset_1 = random.randint(0, 8)
+            spacing_0 = random.randint(2, 6)
+            spacing_1 = random.randint(2, 6)
+            input_array, known_array, image_array = ex4(image_np, (offset_0, offset_1), (spacing_0, spacing_1))
+            input_arrays.append(input_array)
+            known_arrays.append(known_array)
+            image_arrays.append(image_array)
+
+        all_images = {"input_arrays": input_arrays,
+                      "known_arrays": known_arrays,
+                      "image_arrays": image_arrays
+                      }
+
+        with open("images_processed.pkl", "wb") as f:
+            pkl.dump(all_images, f)
+
+        print(f"Processed {len(content)} files")

@@ -2,3 +2,4 @@ training_images
 supplements
 test_images
 *.pkl
+*.pt
