@@ -5,19 +5,29 @@ from evalutation import compute_predictions
 from torch.utils.data import DataLoader
 import torch
 
+import os
 
-target_device = get_target_device()
 
-# Create dataset using the class ImageDataset.
-image_data = ChallengeDataset()
+def challenge():
 
-# Create data_loaders from each subset.
-test_loader = DataLoader(
-    image_data,
-    shuffle=False,
-    batch_size=1
-)
+    target_device = get_target_device()
 
-predictor_model = torch.load("best_model.pt").to(target_device)
+    # Create dataset using the class ChallengeDataset.
+    image_data = ChallengeDataset(os.path.join("test_images", "test_images.pkl"))
 
-compute_predictions(predictor_model, test_loader)
+    # Create data_loaders from test_set.
+    test_loader = DataLoader(
+        image_data,
+        shuffle=False,
+        batch_size=1
+    )
+
+    # Load trained model.
+    predictor_model = torch.load("best_model.pt").to(target_device)
+
+    # Compute predictions.
+    compute_predictions(predictor_model, test_loader)
+
+
+if __name__ == "__main__":
+    challenge()

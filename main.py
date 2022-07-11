@@ -5,6 +5,7 @@ from training_dataset import ImageDataset
 from model import ImagePixelPredictor
 from training import optimizing_predictor
 from helper_methods import get_target_device, set_random_seed
+from challenge import challenge
 
 
 target_device = get_target_device()
@@ -42,14 +43,21 @@ predictor_model = ImagePixelPredictor(n_input_channels=6,
                                       n_output_channels=3).to(target_device)
 
 # Define optimizer.
-optimizer = torch.optim.Adam(predictor_model.parameters(), lr=1e-3)
+optimizer = torch.optim.Adam(predictor_model.parameters(), lr=1e-2)
 
 # Train model on data.
 optimizing_predictor(train_loader=training_loader,
                      validation_loader=validation_loader,
                      test_loader=test_loader,
                      model=predictor_model,
-                     epochs=20,
+                     epochs=60,
                      loss_function=loss,
                      optimizer=optimizer,
-                     adapt_lr_factor=3)
+                     adapt_lr_factor=1.2)
+
+result = input("Compute predictions: y / n? ")
+
+if result.lower() == "y":
+    challenge()
+
+# TODO: Load model and continue training!

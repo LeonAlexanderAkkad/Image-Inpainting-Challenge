@@ -2,13 +2,11 @@ from torch.utils.data import Dataset
 
 import dill as pkl
 
-import os
-
 
 class ChallengeDataset(Dataset):
-    def __init__(self):
+    def __init__(self, file_path):
 
-        with open(os.path.join("test_images", "test_images.pkl"), "rb") as f:
+        with open(file_path, "rb") as f:
             all_arrays = pkl.load(f)
 
         self.known_arrays = all_arrays["known_arrays"]

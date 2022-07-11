@@ -3,3 +3,4 @@ supplements
 test_images
 *.pkl
 *.pt
+results

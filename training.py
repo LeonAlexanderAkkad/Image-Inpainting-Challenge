@@ -30,7 +30,7 @@ def optimizing_predictor(
 
     best_loss = 0
     lr = get_lr(optimizer)
-    writer = SummaryWriter(log_dir=os.path.join("results", "experiment_02"))
+    writer = SummaryWriter(log_dir=os.path.join("results", "experiment_04"))
     print("\nStarting to train ImagePixelPredictor")
     for epoch in range(epochs):
 
@@ -50,8 +50,8 @@ def optimizing_predictor(
                           scalar_value=validation_rsme_loss,
                           global_step=epoch)
 
-        print(f"Epoch: {str(epoch + 1).zfill(len(str(epochs)))} (lr={lr} / "
-              f"Validation loss: {validation_loss:.4f} | {validation_rsme_loss:.4f} / "
+        print(f"\nEpoch: {str(epoch + 1).zfill(len(str(epochs)))} (lr={lr:.6f} || "
+              f"Validation loss: {validation_loss:.4f} | {validation_rsme_loss:.4f} || "
               f"Training loss: {train_loss:.4f} | {train_rsme_loss:.4f})")
 
         if adapt_lr_factor is not None:
@@ -63,7 +63,9 @@ def optimizing_predictor(
                 lr /= adapt_lr_factor
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
-                print(f"New learning rate: {lr}")
+                print(f"New learning rate: {lr:.6f}")
+
+        print(100 * "=" + "\n")
 
     test_loss = eval_model(model, test_loader, loss_function)
 
@@ -127,7 +129,7 @@ def train_model(
     lr = get_lr(optimizer)
 
     for data in tqdm(training_loader, desc=f"Training epoch {epoch + 1} "
-                                           f"(lr={lr}"):
+                                           f"(lr={lr:.6f})"):
 
         image_array, input_array, known_array = data
         inputs = input_array.type(torch.float32).to(device=target_device)
