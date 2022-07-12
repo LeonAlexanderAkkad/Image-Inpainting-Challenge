@@ -9,6 +9,14 @@ import os
 
 
 def challenge():
+    """Carry out the Image Inpainting Challenge 2022.
+
+    The function tests the trained model on test data and computes predictions used for scoring.
+
+    Returns
+    -------
+    None
+    """
 
     target_device = get_target_device()
 

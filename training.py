@@ -27,6 +27,35 @@ def optimizing_predictor(
         optimizer: Optimizer,
         adapt_lr_factor: Optional[float] = None
         ):
+    """Optimizes a given model for a number of epochs and saves the best model.
+
+    The function computes both the MSE (Mean squared error) and the RMSE (Root mean squared error) between
+    the output of the model and the given target. Depending on the best RMSE on the validation data, the best
+    model is then saved to the specified file.
+
+    Parameters
+    ----------
+    train_loader: DataLoader
+        Data for training the model.
+    validation_loader: DataLoader
+        Data for monitoring validation loss.
+    test_loader: DataLoader
+        Data for checking how well the model works on unseen data.
+    model: ImagePixelPredictor
+        Model to be trained.
+    epochs: int
+        Number of epochs to train the model for.
+    loss_function: nn.Module
+        Loss function used to compute the loss between the output of the model and the target.
+    optimizer: Optimizer
+        Specified optimizer to be used to optimize the model.
+    adapt_lr_factor: Optional[float] = None
+        Factor used to adapt the learning rate if the model starts to over-fit on the training data.
+
+    Returns
+    -------
+    None
+    """
 
     best_loss = 0
     lr = get_lr(optimizer)
@@ -54,6 +83,7 @@ def optimizing_predictor(
               f"Validation loss: {validation_loss:.4f} | {validation_rsme_loss:.4f} || "
               f"Training loss: {train_loss:.4f} | {train_rsme_loss:.4f})")
 
+        # Either save the best model or adapt the learning rate if necessary.
         if adapt_lr_factor is not None:
             if not best_loss or validation_rsme_loss < best_loss:
                 best_loss = validation_rsme_loss
@@ -79,13 +109,33 @@ def eval_model(
         loss_function: nn.Module,
         inspection: bool = False
         ) -> Tuple[float, float]:
+    """Evaluates a given model on test data.
 
+    Parameters
+    ----------
+    model: ImagePixelPredictor
+        Model used for evaluation.
+    test_loader: DataLoader
+        Data used for testing the model.
+    loss_function: nn.Module
+        Loss function used to determine the "goodness" of the model.
+    inspection: bool = False
+        Optional parameter used to inspect individual predictions of the model.
+
+    Returns
+    -------
+    Tuple[float, float]
+        A tuple containing both the MSE and RMSE.
+    """
+
+    # Turn on evaluation mode for the model.
     model.eval()
 
     target_device = get_target_device()
 
     total_loss, total_rmse_loss, num_samples = 0.0, 0.0, 0
 
+    # Compute the loss with torch.no_grad() as gradients aren't used.
     with torch.no_grad():
         for data in test_loader:
             image_array, input_array, known_array = data
@@ -95,16 +145,17 @@ def eval_model(
 
             outputs = model(inputs, known)
 
-            # Compute the loss
+            # Compute the loss.
             loss = loss_function(outputs, targets)
 
-            # Compute total loss
+            # Compute total loss.
             total_loss += loss.item()
             total_rmse_loss += rmse(outputs.cpu().detach().numpy(), targets.cpu().detach().numpy())
 
-            # Compute number of samples
+            # Compute number of samples.
             num_samples += inputs.shape[0]
 
+            # If specified look into individual outputs.
             if inspection:
                 inspect_predictions(inputs, outputs, targets)
 
@@ -115,12 +166,33 @@ def train_model(
         model: ImagePixelPredictor,
         optimizer: Optimizer,
         training_loader: DataLoader,
-        loss_function,
+        loss_function: nn.Module,
         epoch: int
         ) -> Tuple[float, float]:
+    """Trains a given model on the training data.
+
+    Parameters
+    ----------
+    model: ImagePixelPredictor
+        Model to be trained.
+    optimizer: Optimizer
+        Specified optimizer to be used to optimize the model.
+    training_loader: DataLoader
+        Data used for training the model.
+    loss_function: nn.Module
+        Loss function used to compute the loss between the output of the model and the given target.
+    epoch: int
+        Number of iteration.
+
+    Returns
+    -------
+    Tuple[float, float]
+        A tuple containing both the MSE and RMSE loss.
+    """
 
     target_device = get_target_device()
 
+    # Put the model into train mode and enable gradients computation.
     model.train()
     torch.enable_grad()
 
@@ -138,18 +210,19 @@ def train_model(
 
         outputs = model(inputs, known)
 
-        # Compute loss
+        # Compute loss.
         loss = loss_function(outputs, targets)
 
-        # Compute the gradients
+        # Compute the gradients.
         loss.backward()
 
-        # Perform the update
+        # Perform the update.
         optimizer.step()
 
-        # Reset the accumulated gradients
+        # Reset the accumulated gradients.
         optimizer.zero_grad()
 
+        # Compute the total loss.
         total_loss += loss.item()
         total_rmse_loss += rmse(outputs.cpu().detach().numpy(), targets.cpu().detach().numpy())
         num_samples += inputs.shape[0]
@@ -158,11 +231,13 @@ def train_model(
 
 
 def get_lr(optimizer):
+    """Get the learning rate used for optimizing."""
     for param_group in optimizer.param_groups:
         return param_group['lr']
 
 
 def inspect_predictions(inputs: torch.Tensor, outputs: torch.Tensor, targets: torch.Tensor):
+    """Plot individual outputs of the model."""
     input_array_np = inputs[0].to(torch.uint8).permute(1, 2, 0).cpu().detach().numpy()
     output_np = outputs[0].to(torch.uint8).permute(1, 2, 0).cpu().detach().numpy()
     targets_np = targets[0].to(torch.uint8).permute(1, 2, 0).cpu().detach().numpy()

@@ -5,7 +5,8 @@ import numpy as np
 import torch
 
 
-def set_random_seed(seed: int = 69) -> None:
+def set_random_seed(seed: int = 42) -> None:
+    """Set the random seed for different modules."""
     random.seed(seed)
     np.random.seed(seed)
     torch.random.manual_seed(seed)
@@ -14,6 +15,7 @@ def set_random_seed(seed: int = 69) -> None:
 
 
 def get_target_device():
+    """Get the target device where training takes place."""
     return torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 

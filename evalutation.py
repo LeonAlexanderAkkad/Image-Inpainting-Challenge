@@ -8,8 +8,21 @@ import dill as pkl
 
 
 def compute_predictions(model: ImagePixelPredictor,
-                        test_loader: DataLoader) -> None:
+                        test_loader: DataLoader
+                        ) -> None:
+    """Compute the model predictions and store them in a file.
 
+    Parameters
+    ----------
+    model: ImagePixelPredictor
+        Model used to compute the predictions.
+    test_loader: DataLoader
+        Test data used to compute the predictions.
+
+    Returns
+    -------
+    None
+    """
     model.eval()
 
     target_device = get_target_device()

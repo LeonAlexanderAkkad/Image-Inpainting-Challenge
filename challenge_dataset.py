@@ -4,7 +4,15 @@ import dill as pkl
 
 
 class ChallengeDataset(Dataset):
+    """Dataset for the challenge data."""
     def __init__(self, file_path):
+        """Initializes the dataset by loading the data from the specified path.
+
+        Parameters
+        ----------
+        file_path: str
+            Path to data.
+        """
 
         with open(file_path, "rb") as f:
             all_arrays = pkl.load(f)

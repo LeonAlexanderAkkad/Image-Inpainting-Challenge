@@ -14,7 +14,17 @@ import glob
 
 
 class ImageDataset(Dataset):
+    """Dataset used for training ImagePixelPredictor"""
+
     def __init__(self, path: str):
+        """Initializes the dataset either by loading preprocessed images or by processing them.
+
+        Parameters
+        ----------
+        path: str
+            Path to preprocessed images.
+        """
+
         if not os.path.exists("images_processed.pkl"):
             self.__process_dataset(path)
 
@@ -31,7 +41,23 @@ class ImageDataset(Dataset):
     def __len__(self):
         return len(self.input_arrays)
 
-    def split(self, ratios: Tuple[int, int, int], random_seed=42) -> Tuple[Subset, Subset, Subset]:
+    def split(self, ratios: Tuple[int, int, int], random_seed: int = 42) -> Tuple[Subset, Subset, Subset]:
+        """Splits the dataset into training, validation and test set using ratios and a random seed.
+
+        Parameters
+        ----------
+        ratios: Tuple[int, int, int]
+            A tuple specifying the ratios used for splitting the dataset. The first element of the tuple is used
+            for the training set, the second for the test set and the third for the validation set.
+        random_seed: int
+            Random seed used fo shuffling the indices.
+
+        Returns
+        -------
+        Tuple[Subset, Subset, Subset]
+            A tuple containing training, test and validation set.
+        """
+
         ratios_sum = sum(ratios)
 
         n_samples = len(self)
@@ -64,7 +90,20 @@ class ImageDataset(Dataset):
     ####################################################
 
     # noinspection PyMethodMayBeStatic
-    def __process_dataset(self, file_path: str):
+    def __process_dataset(self, file_path: str) -> None:
+        """Processes jpg images by resizing them and applying random offset and spacing.
+
+        Parameters
+        ----------
+        file_path: str
+            Path to the images that will be processed.
+
+        Returns
+        -------
+        None
+        """
+
+        # Collect every image in each sub-folder.
         content = glob.glob(os.path.join(file_path, '**', '*.jpg'), recursive=True)
         content.sort()
         resize = transforms.Compose([
@@ -73,6 +112,7 @@ class ImageDataset(Dataset):
         random.seed(42)
         image_arrays, known_arrays, input_arrays = [], [], []
 
+        # Processes each image by resizing and applying random offset and spacing.
         for picture in tqdm(content, desc="Processing images"):
             with Image.open(picture) as image:
                 image = resize(image)
@@ -86,11 +126,13 @@ class ImageDataset(Dataset):
             known_arrays.append(known_array)
             image_arrays.append(image_array)
 
+        # Collect all images in a dictionary
         all_images = {"input_arrays": input_arrays,
                       "known_arrays": known_arrays,
                       "image_arrays": image_arrays
                       }
 
+        # Save this dictionary in images_processed.pkl.
         with open("images_processed.pkl", "wb") as f:
             pkl.dump(all_images, f)
 
