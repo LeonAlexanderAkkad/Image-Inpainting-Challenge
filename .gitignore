@@ -4,3 +4,5 @@ test_images
 *.pkl
 *.pt
 results
+__pycache__
+.idea
