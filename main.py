@@ -50,7 +50,7 @@ optimizing_predictor(train_loader=training_loader,
                      validation_loader=validation_loader,
                      test_loader=test_loader,
                      model=predictor_model,
-                     epochs=60,
+                     epochs=100,
                      loss_function=loss,
                      optimizer=optimizer,
                      adapt_lr_factor=1.2)
@@ -59,5 +59,3 @@ result = input("Compute predictions: y / n? ")
 
 if result.lower() == "y":
     challenge()
-
-# TODO: Load model and continue training!
