@@ -247,3 +247,5 @@ test_images
 results
 
 *.zip
+
+.idea
